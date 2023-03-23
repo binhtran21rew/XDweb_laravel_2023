@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
+    public function abc(){
+        return response()->json(['binh' => 20]);
+    }
     public function addtocart(Request $request)
     {
         if(auth('sanctum')->check())
@@ -16,7 +20,6 @@ class CartController extends Controller
             $user_id=auth('sanctum')->user()->id;
             $product_id = $request->product_id;
             $product_quantity = $request->product_quantity;
-
             $productCheck = Product::where('id',$product_id)->first();
             if($productCheck)
             {
@@ -66,11 +69,15 @@ class CartController extends Controller
         if(auth('sanctum')->check())
         {
             $user_id= auth('sanctum')->user()->id;
-            $cartitems = Cart::where('user_id', $user_id)->get(); 
+            $cartitems = DB::table('carts')
+            ->join('products', 'carts.product_id', '=' ,'products.id')
+            ->select('products.*', 'carts.id as idCart', 'carts.product_quantity')->where('carts.user_id', $user_id)->get();
+            // $cartitems = Cart::where('user_id', $user_id)->get();
             return response()->json([
                 'status' => 200,
                 'cart' => $cartitems,
             ]);
+            
         }
         else
         {
@@ -87,10 +94,12 @@ class CartController extends Controller
         {
             $user_id= auth('sanctum')->user()->id;
             $cartitem = Cart::where('id',$cart_id)->where('user_id',$user_id)->first();
-            if($scope == "inc"){
-                $cartitem->product_quantity += 1;
-            }else if($scope == "dec"){
-                $cartitem->product_quantity -= 1;
+            if($cartitem->product_quantity > 1){
+                if($scope == "inc"){
+                    $cartitem->product_quantity += 1;
+                }else if($scope == "dec"){
+                    $cartitem->product_quantity -= 1;
+                }
             }
             $cartitem -> update();
             return response()->json([
@@ -114,7 +123,8 @@ class CartController extends Controller
         if(auth('sanctum')->check())
         {
             $user_id= auth('sanctum')->user()->id;
-            $cartitem = Cart::where('id',$cart_id)->where('user_id',$user_id)->first();
+            // $cartitem = Cart::where('id',$cart_id)->where('user_id',$user_id)->first();
+            $cartitem = Cart::find($cart_id)->where('user_id',$user_id)->first();
             if($cartitem)
             {
                 $cartitem->delete();

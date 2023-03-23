@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 class CategoryController extends Controller
 {
     public function getAll(){
-        $category = Category::where('status', '0')->get();
+        $category = Category::where('status', '0')->where('parent_id', 0)->get();
         return response()->json([
             'status' => 200,
             'categories'=> $category
@@ -45,6 +45,7 @@ class CategoryController extends Controller
         }else{
             $category = new Category();
             $category->name = $req->input('name');
+            $category->parent_id = $req->input('parent_id');
             $category->slug = $req->input('slug');
             $category->status = $req->input('status') == true ? '1' : '0';
             $category->save();
@@ -99,21 +100,31 @@ class CategoryController extends Controller
     }
     public function delete($id){
         $category = Category::find($id);
+        $isChilde = Category::where('parent_id', $id)->limit(1)->get()->count();
+        
         $isProduct = Product::where('category_id', $id)->limit(1)->get()->count();
-        if($isProduct > 0){
+        if($isChilde > 0){
             return response()->json([
                 'status' => 404,
-                'message' => 'Have product in category'
+                'message' => 'This is have a category children'
             ]);
         }else{
-            $category->update([
-                'status' => '1',
-            ]);
-            return response()->json([
-                'status' => 200,
-                'message' => 'Category was move to garbage'
-            ]);
+            if($isProduct > 0){
+                return response()->json([
+                    'status' => 404,
+                    'message' => 'Have product in category'
+                ]);
+            }else{
+                $category->update([
+                    'status' => '1',
+                ]);
+                return response()->json([
+                    'status' => 200,
+                    'message' => 'Category was move to garbage'
+                ]);
+            }
         }
+        
     }
 
     public function restore($id){

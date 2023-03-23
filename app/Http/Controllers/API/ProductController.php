@@ -6,10 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class ProductController extends Controller
 {
+    public function viewHome(){
+        $product = DB::table('products')
+        ->join('categories', 'products.category_id', '=' ,'categories.id')
+        ->select('products.*', 'categories.name as nameCate', 'categories.parent_id as idCate', 'categories.slug as slugCate')->get();
+        return response()->json([
+            'status' => 200,
+            'products'=> $product
+        ]);
+    }
     public function index() {
         $product = Product::all();
         return response()->json([
@@ -130,7 +140,23 @@ class ProductController extends Controller
                     'status' => 404,
                     'message' => 'Product not found'
                 ]);
+                
             }
+        }
+    }
+
+    public function delete($id){
+        $product = Product::find($id);
+        if($product){
+            $path = $product->image;
+            if(File::exists($path)){
+                File::delete($path);
+            }
+            $product->delete();
+            return response()->json([
+                'status' => 200,
+                'message' => 'Category was delete successfully'
+            ]);
         }
     }
 
