@@ -10,7 +10,7 @@
 ## About Project
 
 This is my subject project on Backend connect to the project name is "client"
-        https://github.com/binhtran21rew/client.git
+        https://github.com/binhtran21rew/XDweb_reactjs_2023
 - which written by Reactjs
 
 
